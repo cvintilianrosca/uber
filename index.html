@@ -106,10 +106,10 @@
       </div>
       <p class="small">La ce oră termini?</p>
       <div class="chips" id="times">
-        <button class="chip" data-t="17:00">17:00</button>
         <button class="chip on" data-t="18:00">18:00</button>
         <button class="chip" data-t="19:00">19:00</button>
         <button class="chip" data-t="când termină domnișoara">când termin</button>
+        <button class="chip" data-t="oricând, uber aici mereu">nu contează, uber aici mereu</button>
       </div>
       <button class="main" data-next="s2">Caută o cursă</button>
     </div>
@@ -190,7 +190,7 @@
   });
   document.getElementById("confirm").addEventListener("click", () => {
     cancel.style.display = "none";
-    document.getElementById("when").textContent = time.startsWith("c") ? time : "la " + time;
+    document.getElementById("when").textContent = /^\d/.test(time) ? "la " + time : time;
     go("s4");
   });
 </script>
