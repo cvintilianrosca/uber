@@ -154,10 +154,17 @@
 </div>
 
 <script>
+  const LOG_URL = "";
+  function log(event, detail) {
+    if (!LOG_URL) return;
+    fetch(LOG_URL, { method: "POST", mode: "no-cors", keepalive: true, headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ event, detail, ua: navigator.userAgent }) }).catch(() => {});
+  }
+  log("deschis");
   let time = "18:00";
   document.querySelectorAll("#times .chip").forEach(c => c.addEventListener("click", () => {
     document.querySelectorAll("#times .chip").forEach(x => x.classList.remove("on"));
-    c.classList.add("on"); time = c.dataset.t;
+    c.classList.add("on"); time = c.dataset.t; log("ora", time);
   }));
 
   const eta = document.getElementById("eta");
@@ -177,7 +184,7 @@
   const hints = ["", "Hmm...", "Butonul ăsta pare cam timid.", "Nu prea vrea să fie apăsat.", "Celălalt e mult mai simpatic.", "Serios, încearcă pe negru.", "🙏"];
   let n = 0;
   cancel.addEventListener("click", () => {
-    n++;
+    n++; log("anuleaza", "a " + n + "-a oară");
     cancel.textContent = texts[Math.min(n, texts.length - 1)];
     hint.textContent = hints[Math.min(n, hints.length - 1)];
     document.body.appendChild(cancel);
@@ -188,7 +195,7 @@
     cancel.classList.remove("shake"); void cancel.offsetWidth; cancel.classList.add("shake");
   });
   document.getElementById("confirm").addEventListener("click", () => {
-    cancel.style.display = "none";
+    cancel.style.display = "none"; log("confirmat", time);
     document.getElementById("when").textContent = /^\d/.test(time) ? "la " + time : time;
     go("s4");
   });
