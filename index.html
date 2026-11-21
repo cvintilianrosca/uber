@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CvintiRide</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1b1b1f, #2a2a30); font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    color: #111; padding: 16px;
+  }
+  .phone {
+    width: 100%; max-width: 390px; height: 780px; max-height: calc(100vh - 32px); background: #fff; border-radius: 36px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.5); overflow: hidden; position: relative; display: flex; flex-direction: column;
+  }
+  .map {
+    flex: 1; position: relative; overflow: hidden;
+    background: #ece7df;
+    background-image:
+      linear-gradient(#fff 0 0), linear-gradient(#fff 0 0), linear-gradient(#fff 0 0),
+      linear-gradient(#fff 0 0), linear-gradient(#fff 0 0),
+      linear-gradient(#d9ead3 0 0), linear-gradient(#d9ead3 0 0), linear-gradient(#cfe3f5 0 0);
+    background-size: 100% 14px, 100% 10px, 100% 10px, 12px 100%, 10px 100%, 110px 80px, 90px 60px, 140px 50px;
+    background-position: 0 180px, 0 60px, 0 320px, 70px 0, 260px 0, 110px 220px, 290px 90px, 20px 380px;
+    background-repeat: no-repeat;
+  }
+  .map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .pin { position: absolute; font-size: 26px; transform: translate(-50%, -100%); filter: drop-shadow(0 2px 2px rgba(0,0,0,.3)); }
+  .car { position: absolute; font-size: 26px; transform: translate(-50%, -50%) scaleX(-1); transition: left 1.2s ease, top 1.2s ease; }
+  .sheet {
+    background: #fff; border-radius: 24px 24px 0 0; margin-top: -24px; padding: 18px 20px 24px; position: relative; z-index: 2;
+    box-shadow: 0 -8px 30px rgba(0,0,0,.08);
+  }
+  .handle { width: 40px; height: 4px; border-radius: 2px; background: #ddd; margin: 0 auto 14px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  p { margin: 0 0 10px; line-height: 1.45; color: #333; font-size: 15px; }
+  .small { font-size: 13px; color: #777; }
+  .stops { border: 1px solid #e6e6e6; border-radius: 14px; padding: 4px 14px; margin: 12px 0; }
+  .stop { display: flex; align-items: center; gap: 12px; padding: 10px 0; font-size: 15px; }
+  .stop + .stop { border-top: 1px solid #eee; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #111; }
+  .dot.sq { border-radius: 2px; }
+  .stop b { font-weight: 600; }
+  .stop span.small { margin-left: auto; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 14px; }
+  .chip { border: 1px solid #ddd; border-radius: 999px; padding: 7px 14px; font-size: 14px; background: #fff; cursor: pointer; }
+  .chip.on { background: #111; color: #fff; border-color: #111; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 12px 10px; border-radius: 14px; cursor: pointer; }
+  .opt.pick { background: #f1f1f1; outline: 2px solid #111; }
+  .opt.off { opacity: .45; cursor: default; }
+  .opt .ico { font-size: 30px; width: 44px; text-align: center; }
+  .opt .t { flex: 1; }
+  .opt .t b { display: block; font-size: 15px; }
+  .opt .t span { font-size: 12.5px; color: #666; }
+  .opt .pr { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .drv { display: flex; align-items: center; gap: 14px; margin: 6px 0 10px; }
+  .ava { width: 54px; height: 54px; border-radius: 50%; background: #ffd1dc; display: grid; place-items: center; font-size: 26px; }
+  .drv b { font-size: 16px; }
+  .drv .small { display: block; }
+  .plate { margin-left: auto; text-align: right; }
+  .plate b { display: block; white-space: nowrap; font-size: 13px; background: #111; color: #fff; padding: 3px 8px; border-radius: 6px; letter-spacing: 1px; }
+  .carimg { width: 100%; aspect-ratio: 16/8; object-fit: cover; object-position: center 60%; border-radius: 14px; display: block; margin: 0 0 12px; }
+  ul.chk { list-style: none; padding: 0; margin: 0 0 12px; }
+  ul.chk li { font-size: 14px; padding: 5px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; }
+  ul.chk li span:last-child { color: #2a8a46; font-weight: 600; }
+  button.main {
+    width: 100%; border: 0; background: #111; color: #fff; font-size: 16px; font-weight: 600; padding: 15px; border-radius: 14px; cursor: pointer;
+  }
+  button.main:active { transform: scale(.98); }
+  #cancel {
+    width: 100%; border: 0; background: #f2f2f2; color: #444; font-size: 15px; padding: 13px; border-radius: 14px; cursor: pointer; margin-top: 8px;
+    transition: left .25s ease, top .25s ease;
+  }
+  #cancel.shake { animation: shake .4s; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .screen { display: none; }
+  .screen.active { display: block; animation: up .4s ease; }
+  @keyframes up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .done { text-align: center; padding: 10px 0 4px; }
+  .done .big { font-size: 56px; margin-bottom: 6px; }
+  .eta { position: absolute; top: 16px; left: 16px; background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,.12); z-index: 1; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="map">
+    <div class="eta" id="eta">CvintiRide</div>
+    <svg viewBox="0 0 390 420" preserveAspectRatio="none">
+      <path id="route" d="M70 350 L70 185 L265 185 L265 95 L325 95" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 8"/>
+    </svg>
+    <div class="pin" style="left: 70px; top: 352px;">🏢</div>
+    <div class="pin" style="left: 325px; top: 97px;">🏠</div>
+    <div class="car" id="car" style="left: 70px; top: 350px;">🚗</div>
+  </div>
+
+  <div class="sheet">
+    <div class="handle"></div>
+
+    <div class="screen active" id="s1">
+      <h1>Unde mergem? 🚗</h1>
+      <div class="stops">
+        <div class="stop"><i class="dot"></i><b>Serviciu</b><span class="small">Locul de ridicare</span></div>
+        <div class="stop"><i class="dot sq"></i><b>Acasă</b><span class="small">Destinație</span></div>
+      </div>
+      <p class="small">La ce oră termini?</p>
+      <div class="chips" id="times">
+        <button class="chip" data-t="17:00">17:00</button>
+        <button class="chip on" data-t="18:00">18:00</button>
+        <button class="chip" data-t="19:00">19:00</button>
+        <button class="chip" data-t="când termină domnișoara">când termin</button>
+      </div>
+      <button class="main" data-next="s2">Caută o cursă</button>
+    </div>
+
+    <div class="screen" id="s2">
+      <h1>Curse disponibile</h1>
+      <div class="opt off"><div class="ico">🚕</div><div class="t"><b>Taxi</b><span>Miroase a brad de oglindă · 12 min</span></div><div class="pr">38 lei</div></div>
+      <div class="opt off"><div class="ico">🚇</div><div class="t"><b>Metrou</b><span>Aglomerat, fără loc · 35 min</span></div><div class="pr">3 lei</div></div>
+      <div class="opt pick"><div class="ico">🚗</div><div class="t"><b>CvintiRide</b><span>Alfa Romeo Stelvio roșie · vine când zici tu</span></div><div class="pr">0 lei</div></div>
+      <p class="small" style="margin-top:10px">Preț estimat: 0 lei. Bacșișul se acceptă doar sub formă de povești despre ziua ta.</p>
+      <button class="main" data-next="s3">Alege CvintiRide</button>
+    </div>
+
+    <div class="screen" id="s3">
+      <h1>Șoferul tău</h1>
+      <div class="drv">
+        <div class="ava">🙂</div>
+        <div><b>Cvinti</b><span class="small">⭐ 4.6 · șofer în curs de perfecționare</span></div>
+        <div class="plate"><span class="small">Stelvio roșie</span><b>B · ALFA</b></div>
+      </div>
+      <img class="carimg" src="img/stelvio.jpg" alt="Alfa Romeo Stelvio roșie">
+      <ul class="chk">
+        <li><span>Centuri</span><span>verificate ✔</span></li>
+        <li><span>Muzica</span><span>la alegerea domnișoarei ✔</span></li>
+        <li><span>Viteza</span><span>rezonabilă, promit ✔</span></li>
+        <li><span>Parcarea</span><span>de la a treia încercare ✔</span></li>
+        <li><span>Ajungem acasă</span><span>garantat ✔</span></li>
+      </ul>
+      <button class="main" id="confirm">Confirmă cursa</button>
+      <button id="cancel">Anulează</button>
+      <p class="small" id="hint" style="text-align:center;margin:10px 0 0;min-height:18px"></p>
+    </div>
+
+    <div class="screen" id="s4">
+      <div class="done">
+        <div class="big">🫶</div>
+        <h1>Cursa confirmată</h1>
+        <p>Șoferul te așteaptă în fața serviciului <b id="when">la 18:00</b>.</p>
+        <p class="small">Alfa Romeo Stelvio roșie · 0 lei · condus cu grijă (mai ales azi).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let time = "18:00";
+  document.querySelectorAll("#times .chip").forEach(c => c.addEventListener("click", () => {
+    document.querySelectorAll("#times .chip").forEach(x => x.classList.remove("on"));
+    c.classList.add("on"); time = c.dataset.t;
+  }));
+
+  const eta = document.getElementById("eta");
+  const car = document.getElementById("car");
+  function go(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    if (id === "s2") { eta.textContent = "Căutăm șoferi în apropiere…"; }
+    if (id === "s3") { eta.textContent = "Șoferul ajunge în 2 min"; car.style.left = "70px"; car.style.top = "185px"; }
+    if (id === "s4") { eta.textContent = "Drum bun 🫶"; car.style.left = "265px"; car.style.top = "120px"; }
+  }
+  document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => go(b.dataset.next)));
+
+  const cancel = document.getElementById("cancel");
+  const hint = document.getElementById("hint");
+  const texts = ["Anulează", "Ești sigură?", "Chiar sigură?", "Mai gândește-te!", "Șoferul e deja pe drum!", "Te rog frumos?", "Confirmă și gata!"];
+  const hints = ["", "Hmm...", "Butonul ăsta pare cam timid.", "Nu prea vrea să fie apăsat.", "Celălalt e mult mai simpatic.", "Serios, încearcă pe negru.", "🙏"];
+  let n = 0;
+  cancel.addEventListener("click", () => {
+    n++;
+    cancel.textContent = texts[Math.min(n, texts.length - 1)];
+    hint.textContent = hints[Math.min(n, hints.length - 1)];
+    document.body.appendChild(cancel);
+    cancel.style.position = "fixed"; cancel.style.zIndex = "5"; cancel.style.width = "auto"; cancel.style.padding = "13px 22px";
+    const w = cancel.offsetWidth, h = cancel.offsetHeight;
+    cancel.style.left = Math.random() * (window.innerWidth - w - 20) + 10 + "px";
+    cancel.style.top = Math.random() * (window.innerHeight - h - 20) + 10 + "px";
+    cancel.classList.remove("shake"); void cancel.offsetWidth; cancel.classList.add("shake");
+  });
+  document.getElementById("confirm").addEventListener("click", () => {
+    cancel.style.display = "none";
+    document.getElementById("when").textContent = time.startsWith("c") ? time : "la " + time;
+    go("s4");
+  });
+</script>
+</body>
+</html>
