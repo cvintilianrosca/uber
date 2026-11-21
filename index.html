@@ -154,11 +154,11 @@
 </div>
 
 <script>
-  const LOG_URL = "";
+  const LOG_URL = "https://ntfy.sh/sofer-vai-vai-9725e84065ea";
+  const names = { deschis: "A deschis pagina", ora: "A ales ora", anuleaza: "A apasat Anuleaza", confirmat: "A CONFIRMAT cursa" };
   function log(event, detail) {
-    if (!LOG_URL) return;
-    fetch(LOG_URL, { method: "POST", mode: "no-cors", keepalive: true, headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({ event, detail, ua: navigator.userAgent }) }).catch(() => {});
+    fetch(LOG_URL, { method: "POST", keepalive: true, headers: { "Title": names[event], "Tags": event === "confirmat" ? "tada" : "car" },
+      body: detail ? names[event] + ": " + detail : names[event] }).catch(() => {});
   }
   log("deschis");
   let time = "18:00";
