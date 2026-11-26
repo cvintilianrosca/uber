@@ -79,6 +79,10 @@
   }
   #cancel.shake { animation: shake .4s; }
   @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .wx { display: flex; gap: 12px; align-items: center; background: #eef4ff; border-radius: 14px; padding: 12px 14px; margin: 6px 0 12px; }
+  .wx .big { font-size: 30px; }
+  .wx b { display: block; font-size: 15px; }
+  .ghost { width: 100%; border: 0; background: #f2f2f2; color: #444; font-size: 15px; padding: 13px; border-radius: 14px; cursor: pointer; margin-top: 8px; }
   .screen { display: none; }
   .screen.active { display: block; animation: up .4s ease; }
   @keyframes up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
@@ -114,7 +118,16 @@
   <div class="sheet">
     <div class="handle"></div>
 
-    <div class="screen active" id="s1">
+    <div class="screen active" id="s0">
+      <h1>E liberă domnișoara azi? 🥶</h1>
+      <div class="wx"><span class="big">🌡️</span><div><b>Frig afară</b><span class="small">Vânt, mâini reci, autobuze pline. Mașina șoferului cu lămâie e încălzită și liberă.</span></div></div>
+      <p class="small">Data trecută a câștigat mama cu cumpărăturile, pe merit. Azi șoferul încearcă din nou: o cursă de la muncă până acasă, cu scaunele încălzite și muzica la alegerea domnișoarei.</p>
+      <button class="main" id="free">Da, azi sunt liberă</button>
+      <button class="ghost" id="busy">Azi nu pot</button>
+      <p class="small" id="busyhint" style="text-align:center;margin-top:8px;"></p>
+    </div>
+
+    <div class="screen" id="s1">
       <h1>Unde mergem? 🚗</h1>
       <div class="stops">
         <div class="stop"><i class="dot"></i><b>Muncă</b><span class="small">Locul de ridicare</span></div>
@@ -173,7 +186,7 @@
 
 <script>
   const LOG_URL = "https://ntfy.sh/sofer-vai-vai-9725e84065ea";
-  const names = { deschis: "A deschis pagina", ora: "A ales ora", anuleaza: "A apasat Anuleaza", confirmat: "A CONFIRMAT cursa" };
+  const names = { deschis: "A deschis pagina", libera: "A zis ca e LIBERA azi", ocupata: "A zis ca azi nu poate", ora: "A ales ora", anuleaza: "A apasat Anuleaza", confirmat: "A CONFIRMAT cursa" };
   function log(event, detail) {
     fetch(LOG_URL, { method: "POST", keepalive: true, headers: { "Title": names[event], "Tags": event === "confirmat" ? "tada" : "car" },
       body: detail ? names[event] + ": " + detail : names[event] }).catch(() => {});
@@ -194,6 +207,13 @@
     if (id === "s3") { eta.textContent = "Șoferul ajunge în 2 min"; car.style.left = "70px"; car.style.top = "185px"; }
     if (id === "s4") { eta.textContent = "Drum bun 🫶"; car.style.left = "265px"; car.style.top = "120px"; }
   }
+  document.getElementById("free").addEventListener("click", () => { log("libera"); go("s1"); });
+  const busyTexts = ["Nicio problemă, mașina rămâne la încălzit pentru altă zi.", "Sigur? Afară chiar e frig.", "Șoferul a pus deja scaunele la încălzit...", "Bine, dar butonul negru e tot acolo."];
+  let b = 0;
+  document.getElementById("busy").addEventListener("click", () => {
+    log("ocupata", "a " + (b + 1) + "-a oară");
+    document.getElementById("busyhint").textContent = busyTexts[Math.min(b, busyTexts.length - 1)]; b++;
+  });
   document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => go(b.dataset.next)));
 
   const cancel = document.getElementById("cancel");
